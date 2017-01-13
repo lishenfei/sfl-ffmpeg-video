@@ -3,3 +3,6 @@ video:
   extensions: mp4,mkv,avi,rmvb,wmv,flv
   column: 2 # 截图后聚合图片的列数
   row: 10 # 截图后聚合图片的行数
+
+server:
+  port: 0

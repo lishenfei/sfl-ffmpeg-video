@@ -8,11 +8,11 @@ import it.sauronsoftware.jave.EncoderException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.util.Collection;
 
@@ -32,13 +32,16 @@ public class VideoServiceImpl implements VideoService {
     @Autowired
     private ShellService shellService;
 
-    @PostConstruct
+    //    @PostConstruct
     public void run() {
         this.videosScreenshot(videoProperties.getBasePath());
     }
 
     @Override
     public void videosScreenshot(String basePath) {
+        if (StringUtils.isEmpty(basePath)) {
+            basePath = videoProperties.getBasePath();
+        }
         log.info("Videos screenshot basePath: {}", basePath);
 
         File baseFile = new File(basePath);

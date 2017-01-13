@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class SflFfmpegVideoApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SflFfmpegVideoApplication.class, args);
+        SpringApplication springApplication = new SpringApplication(SflFfmpegVideoApplication.class);
+        springApplication.addListeners(new ApplicationStartupListener());
+        springApplication.run(args);
     }
 }
