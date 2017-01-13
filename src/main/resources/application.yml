@@ -1,8 +1,9 @@
 video:
   basePath: D:\data\video\back
   extensions: mp4,mkv,avi,rmvb,wmv,flv
-  column: 2 # 截图后聚合图片的列数
-  row: 10 # 截图后聚合图片的行数
+  column: 2
+  row: 10
+  scale: '750:500'
 
 server:
   port: 0

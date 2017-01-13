@@ -20,7 +20,7 @@ public interface VideoService {
      * 获取视频文件播放时长
      *
      * @param videoFile
-     * @return 视频播放时长，单位为分钟
+     * @return 视频播放时长，单位为秒
      * @throws EncoderException
      */
     long getDuration(File videoFile);

@@ -23,8 +23,9 @@ import java.util.Collection;
 @Slf4j
 public class VideoServiceImpl implements VideoService {
 
-    public static final String FFMPEG_CMD = "ffmpeg -i %input -frames 1 -vf \"select=not(mod(n\\,%fps)),scale=375:250,tile=%columnx%row\" %out";
+    public static final String FFMPEG_CMD = "ffmpeg -i %input -frames 1 -vf \"select=not(mod(n\\,%fps)),scale=%scale,tile=%columnx%row\" %out";
     public static final String SCREENSHOT_IMAGE = "%s.png";
+    public static final int VIDEO_FPS = 25;
 
     @Autowired
     private VideoProperties videoProperties;
@@ -64,34 +65,49 @@ public class VideoServiceImpl implements VideoService {
     public long getDuration(File videoFile) {
         try {
             long ls = new Encoder().getInfo(videoFile).getDuration();
-            return ls / 60000;
+            return ls / 1000;
         } catch (EncoderException e) {
-            log.error("file:{} get duration error. ", videoFile, e);
+            log.error("File:{} get duration error. ", videoFile, e);
             return -1L;
         }
     }
 
-    private void videoScreenshot(File videoFile) {
-        String screenImage = String.format(SCREENSHOT_IMAGE, FilenameUtils.getBaseName(videoFile.getName()));
-        if (new File(screenImage).exists()) {
+    private void videoScreenshot(File srcFile) {
+        File videoFile = srcFile;
+        if (videoFile.getName().contains(StringUtils.SPACE)) {
+            videoFile = new File(srcFile.getParent() + "/" + srcFile.getName().replaceAll(StringUtils.SPACE, "_"));
+            srcFile.renameTo(videoFile);
+        }
+        String screenImageName = String.format(SCREENSHOT_IMAGE, FilenameUtils.getBaseName(videoFile.getName()))
+                .replaceAll(StringUtils.SPACE, StringUtils.EMPTY);
+        File screenImage = new File(videoFile.getParent() + "/" + screenImageName);
+
+        if (screenImage.exists()) {
+            log.info("The screen image:[{}] exists. ", screenImage.getPath());
             return;
         }
         String cmd = this.buildFFmpegCmd(videoFile, screenImage);
         shellService.execute(cmd);
-        log.info("Screenshot the video:{} ", videoFile.getPath());
+        log.info("Screenshot complete, the video:{} ", videoFile.getPath());
     }
 
-    private String buildFFmpegCmd(File videoFile, String screenImage) {
+    private String buildFFmpegCmd(File videoFile, File screenImage) {
         long videoTime = this.getDuration(videoFile);
-        long fps = 1500; // 默认1分钟
-        if (videoTime > 0) {
-            fps = (videoTime * 60 * 25) / (videoProperties.getRow() * videoProperties.getColumn());
+        int row = videoProperties.getRow();
+        int column = videoProperties.getColumn();
+        int minFPS = 60 * VIDEO_FPS; // 1分钟
+        long fps = (videoTime > 0) ? ((videoTime * VIDEO_FPS) / (row * column)) : minFPS;
+        if (fps < (minFPS / row * column)) {
+            fps = minFPS;
+            row = 1;
+            column = 1;
         }
         return FFMPEG_CMD.replace("%input", videoFile.getPath())
                 .replace("%fps", String.valueOf(fps))
-                .replace("%column", String.valueOf(videoProperties.getColumn()))
-                .replace("%row", String.valueOf(videoProperties.getRow()))
-                .replace("%out", videoFile.getParent() + "/" + screenImage);
+                .replace("%scale", videoProperties.getScale())
+                .replace("%column", String.valueOf(column))
+                .replace("%row", String.valueOf(row))
+                .replace("%out", screenImage.getPath());
     }
 
 }

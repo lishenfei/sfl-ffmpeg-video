@@ -19,4 +19,6 @@ public class VideoProperties {
     private int row;
 
     private int column;
+
+    private String scale;
 }
